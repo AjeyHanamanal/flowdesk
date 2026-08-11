@@ -1,5 +1,10 @@
 import swaggerJsdoc from 'swagger-jsdoc';
 
+const servers = [{ url: 'http://localhost:3001', description: 'Development' }];
+if (process.env.RENDER_EXTERNAL_URL) {
+  servers.unshift({ url: process.env.RENDER_EXTERNAL_URL, description: 'Production (Render)' });
+}
+
 const options: swaggerJsdoc.Options = {
   definition: {
     openapi: '3.0.0',
@@ -8,7 +13,7 @@ const options: swaggerJsdoc.Options = {
       version: '1.0.0',
       description: 'FlowDesk Operations Command Center REST API',
     },
-    servers: [{ url: 'http://localhost:3001', description: 'Development' }],
+    servers,
     components: {
       securitySchemes: {
         bearerAuth: {

@@ -32,6 +32,28 @@ export function createApp() {
   );
   app.use(express.json());
 
+  app.get('/', (_req, res) => {
+    res.json({
+      success: true,
+      data: {
+        service: 'FlowDesk API',
+        tagline: 'Operations Command Center',
+        status: 'running',
+        docs: '/api/docs',
+        health: '/health',
+        endpoints: {
+          auth: '/api/auth',
+          customers: '/api/customers',
+          products: '/api/products',
+          inventory: '/api/inventory',
+          challans: '/api/challans',
+          dashboard: '/api/dashboard',
+          activity: '/api/activity',
+        },
+      },
+    });
+  });
+
   app.get('/health', (_req, res) => {
     res.json({ success: true, data: { status: 'ok', service: 'flowdesk-api' } });
   });

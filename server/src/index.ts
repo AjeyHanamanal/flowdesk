@@ -6,7 +6,7 @@ const app = createApp();
 
 app.listen(config.port, () => {
   logger.info(`FlowDesk API running on port ${config.port}`);
-  logger.info(`Swagger docs: http://localhost:${config.port}/api/docs`);
+  logger.info(`API docs available at /api/docs`);
 });
 
 export default app;
