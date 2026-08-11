@@ -14,5 +14,6 @@ export const config = {
     .split(',')
     .map((o) => o.trim())
     .filter(Boolean),
+  frontendUrl: process.env.FRONTEND_URL || process.env.CLIENT_URL || '',
   isProduction: process.env.NODE_ENV === 'production',
 };

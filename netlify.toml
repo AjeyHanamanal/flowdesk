@@ -3,6 +3,9 @@
   command = "npm run build"
   publish = "dist"
 
+[build.environment]
+  VITE_API_URL = "https://flowdesk-1-vvsj.onrender.com/api"
+
 # SPA routing — React Router paths work on refresh
 [[redirects]]
   from = "/*"

@@ -2,9 +2,9 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import swaggerUi from 'swagger-ui-express';
-import { config } from './config';
 import { swaggerSpec } from './config/swagger';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
+import { corsOriginCheck, healthCheck, rootHandler } from './utils/rootPage';
 
 import authRoutes from './routes/auth.routes';
 import customerRoutes from './routes/customer.routes';
@@ -20,43 +20,14 @@ export function createApp() {
   app.use(helmet({ contentSecurityPolicy: false }));
   app.use(
     cors({
-      origin: (origin, callback) => {
-        if (!origin || config.allowedOrigins.includes(origin)) {
-          callback(null, true);
-        } else {
-          callback(null, false);
-        }
-      },
+      origin: corsOriginCheck,
       credentials: true,
     })
   );
   app.use(express.json());
 
-  app.get('/', (_req, res) => {
-    res.json({
-      success: true,
-      data: {
-        service: 'FlowDesk API',
-        tagline: 'Operations Command Center',
-        status: 'running',
-        docs: '/api/docs',
-        health: '/health',
-        endpoints: {
-          auth: '/api/auth',
-          customers: '/api/customers',
-          products: '/api/products',
-          inventory: '/api/inventory',
-          challans: '/api/challans',
-          dashboard: '/api/dashboard',
-          activity: '/api/activity',
-        },
-      },
-    });
-  });
-
-  app.get('/health', (_req, res) => {
-    res.json({ success: true, data: { status: 'ok', service: 'flowdesk-api' } });
-  });
+  app.get('/', rootHandler);
+  app.get('/health', healthCheck);
 
   app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
   app.get('/api/docs.json', (_req, res) => res.json(swaggerSpec));
