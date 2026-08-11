@@ -1,0 +1,32 @@
+version: '3.8'
+
+# FlowDesk with Neon (external PostgreSQL)
+# Set DATABASE_URL and DIRECT_URL in server/.env before running.
+#
+# Usage:
+#   docker compose up -d
+
+services:
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: flowdesk-server
+    env_file:
+      - ./server/.env
+    environment:
+      PORT: 3001
+      NODE_ENV: production
+      CLIENT_URL: http://localhost:5173
+    ports:
+      - '3001:3001'
+
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: flowdesk-client
+    ports:
+      - '5173:80'
+    depends_on:
+      - server

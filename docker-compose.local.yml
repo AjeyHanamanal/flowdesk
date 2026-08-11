@@ -1,0 +1,25 @@
+version: '3.8'
+
+# Optional local PostgreSQL for development without Neon
+# Usage: docker compose -f docker-compose.local.yml up postgres -d
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: flowdesk-db
+    environment:
+      POSTGRES_USER: flowdesk
+      POSTGRES_PASSWORD: flowdesk123
+      POSTGRES_DB: flowdesk
+    ports:
+      - '5432:5432'
+    volumes:
+      - flowdesk_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U flowdesk -d flowdesk']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  flowdesk_pgdata:

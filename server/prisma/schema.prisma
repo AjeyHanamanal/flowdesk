@@ -1,0 +1,280 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  ADMIN
+  SALES
+  WAREHOUSE
+  ACCOUNTS
+}
+
+enum CustomerType {
+  RETAIL
+  WHOLESALE
+  DISTRIBUTOR
+}
+
+enum CustomerStatus {
+  LEAD
+  ACTIVE
+  INACTIVE
+}
+
+enum MovementType {
+  IN
+  OUT
+}
+
+enum MovementReason {
+  PURCHASE
+  SALES_CHALLAN
+  MANUAL_ADJUSTMENT
+  RETURN
+  CORRECTION
+}
+
+enum ChallanStatus {
+  DRAFT
+  CONFIRMED
+  CANCELLED
+}
+
+enum ActivityEventType {
+  CUSTOMER_CREATED
+  CUSTOMER_UPDATED
+  NOTE_ADDED
+  FOLLOWUP_SCHEDULED
+  FOLLOWUP_OVERDUE
+  PRODUCT_CREATED
+  PRODUCT_UPDATED
+  STOCK_MOVEMENT
+  LOW_STOCK
+  CHALLAN_CREATED
+  CHALLAN_CONFIRMED
+  CHALLAN_CANCELLED
+}
+
+enum EntityType {
+  CUSTOMER
+  PRODUCT
+  CHALLAN
+  STOCK_MOVEMENT
+  USER
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      Role
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  customersCreated Customer[]         @relation("CreatedBy")
+  customerNotes    CustomerNote[]
+  followups        CustomerFollowup[]
+  stockMovements   StockMovement[]
+  challansCreated  Challan[]          @relation("ChallanCreatedBy")
+  activityEvents   ActivityEvent[]
+
+  @@map("users")
+}
+
+model Customer {
+  id           String         @id @default(uuid())
+  name         String
+  mobile       String
+  email        String?
+  businessName String         @map("business_name")
+  gstNumber    String?        @map("gst_number")
+  customerType CustomerType   @map("customer_type")
+  address      String?
+  status       CustomerStatus @default(LEAD)
+  followUpDate DateTime?      @map("follow_up_date")
+  createdById  String         @map("created_by_id")
+  createdAt    DateTime       @default(now()) @map("created_at")
+  updatedAt    DateTime       @updatedAt @map("updated_at")
+
+  createdBy User               @relation("CreatedBy", fields: [createdById], references: [id])
+  notes     CustomerNote[]
+  followups CustomerFollowup[]
+  challans  Challan[]
+
+  @@index([name])
+  @@index([mobile])
+  @@index([email])
+  @@index([status])
+  @@index([followUpDate])
+  @@index([customerType])
+  @@map("customers")
+}
+
+model CustomerNote {
+  id          String   @id @default(uuid())
+  customerId  String   @map("customer_id")
+  content     String
+  createdById String   @map("created_by_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  customer  Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  createdBy User     @relation(fields: [createdById], references: [id])
+
+  @@index([customerId])
+  @@map("customer_notes")
+}
+
+model CustomerFollowup {
+  id          String    @id @default(uuid())
+  customerId  String    @map("customer_id")
+  scheduledAt DateTime  @map("scheduled_at")
+  notes       String?
+  completed   Boolean   @default(false)
+  createdById String    @map("created_by_id")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  customer  Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  createdBy User     @relation(fields: [createdById], references: [id])
+
+  @@index([customerId])
+  @@index([scheduledAt])
+  @@map("customer_followups")
+}
+
+model Category {
+  id        String    @id @default(uuid())
+  name      String    @unique
+  createdAt DateTime  @default(now()) @map("created_at")
+  products  Product[]
+
+  @@map("categories")
+}
+
+model Warehouse {
+  id        String    @id @default(uuid())
+  name      String    @unique
+  location  String?
+  createdAt DateTime  @default(now()) @map("created_at")
+  products  Product[]
+
+  @@map("warehouses")
+}
+
+model Product {
+  id              String   @id @default(uuid())
+  name            String
+  sku             String   @unique
+  categoryId      String?  @map("category_id")
+  unitPrice       Decimal  @map("unit_price") @db.Decimal(12, 2)
+  currentStock    Int      @default(0) @map("current_stock")
+  minimumStock    Int      @default(0) @map("minimum_stock")
+  warehouseId     String?  @map("warehouse_id")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  category       Category?       @relation(fields: [categoryId], references: [id])
+  warehouse      Warehouse?      @relation(fields: [warehouseId], references: [id])
+  stockMovements StockMovement[]
+  challanItems   ChallanItem[]
+
+  @@index([name])
+  @@index([sku])
+  @@index([currentStock])
+  @@map("products")
+}
+
+model StockMovement {
+  id            String         @id @default(uuid())
+  productId     String         @map("product_id")
+  quantity      Int
+  movementType  MovementType   @map("movement_type")
+  reason        MovementReason
+  referenceType String?        @map("reference_type")
+  referenceId   String?        @map("reference_id")
+  notes         String?
+  createdById   String         @map("created_by_id")
+  createdAt     DateTime       @default(now()) @map("created_at")
+
+  product   Product @relation(fields: [productId], references: [id])
+  createdBy User    @relation(fields: [createdById], references: [id])
+
+  @@index([productId])
+  @@index([createdAt])
+  @@index([referenceType, referenceId])
+  @@map("stock_movements")
+}
+
+model Challan {
+  id            String        @id @default(uuid())
+  challanNumber String        @unique @map("challan_number")
+  customerId    String        @map("customer_id")
+  status        ChallanStatus @default(DRAFT)
+  totalQuantity Int           @default(0) @map("total_quantity")
+  totalAmount   Decimal       @default(0) @map("total_amount") @db.Decimal(14, 2)
+  notes         String?
+  createdById   String        @map("created_by_id")
+  confirmedAt   DateTime?     @map("confirmed_at")
+  cancelledAt   DateTime?     @map("cancelled_at")
+  createdAt     DateTime      @default(now()) @map("created_at")
+  updatedAt     DateTime      @updatedAt @map("updated_at")
+
+  customer  Customer      @relation(fields: [customerId], references: [id])
+  createdBy User          @relation("ChallanCreatedBy", fields: [createdById], references: [id])
+  items     ChallanItem[]
+
+  @@index([challanNumber])
+  @@index([status])
+  @@index([customerId])
+  @@index([createdAt])
+  @@map("challans")
+}
+
+model ChallanItem {
+  id                  String  @id @default(uuid())
+  challanId           String  @map("challan_id")
+  productId           String  @map("product_id")
+  productNameSnapshot String  @map("product_name_snapshot")
+  skuSnapshot         String  @map("sku_snapshot")
+  unitPriceSnapshot   Decimal @map("unit_price_snapshot") @db.Decimal(12, 2)
+  quantity            Int
+  lineTotal           Decimal @map("line_total") @db.Decimal(14, 2)
+
+  challan Challan @relation(fields: [challanId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+
+  @@index([challanId])
+  @@map("challan_items")
+}
+
+model ActivityEvent {
+  id         String            @id @default(uuid())
+  eventType  ActivityEventType @map("event_type")
+  entityType EntityType        @map("entity_type")
+  entityId   String            @map("entity_id")
+  message    String
+  metadata   Json?
+  createdById String?          @map("created_by_id")
+  createdAt  DateTime          @default(now()) @map("created_at")
+
+  createdBy User? @relation(fields: [createdById], references: [id])
+
+  @@index([eventType])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@map("activity_events")
+}
+
+model ChallanSequence {
+  id     Int @id @default(1)
+  year   Int @unique
+  lastNo Int @default(0) @map("last_no")
+
+  @@map("challan_sequences")
+}

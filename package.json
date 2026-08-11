@@ -1,0 +1,13 @@
+{
+  "name": "flowdesk",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev:server": "cd server && npm run dev",
+    "dev:client": "cd client && npm run dev",
+    "db:setup": "cd server && npm run db:setup",
+    "db:seed": "cd server && npm run db:seed",
+    "test": "cd server && npm test",
+    "build": "cd server && npm run build && cd ../client && npm run build"
+  }
+}
