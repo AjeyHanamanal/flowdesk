@@ -1,4 +1,4 @@
-import { apiRequest, downloadAuthenticatedFile } from '../lib/api';
+import { apiRequest, downloadAuthenticatedFile, getApiBase } from '../lib/api';
 import type { AuthResponse, User } from '../types';
 
 export const authApi = {
@@ -35,7 +35,7 @@ export const customerApi = {
   addFollowup: (id: string, scheduledAt: string, notes?: string) =>
     apiRequest(`/customers/${id}/followups`, { method: 'POST', body: JSON.stringify({ scheduledAt, notes }) }),
   getTimeline: (id: string) => apiRequest<import('../types').TimelineEvent[]>(`/customers/${id}/timeline`),
-  exportCsv: () => fetch('/api/customers/export/csv', { headers: { Authorization: `Bearer ${localStorage.getItem('flowdesk_token')}` } }),
+  exportCsv: () => fetch(`${getApiBase()}/customers/export/csv`, { headers: { Authorization: `Bearer ${localStorage.getItem('flowdesk_token')}` } }),
 };
 
 export const productApi = {
@@ -52,7 +52,7 @@ export const productApi = {
   getWarehouses: () => apiRequest<{ id: string; name: string }[]>('/products/meta/warehouses'),
   getMovements: (id: string, page = 1) =>
     apiRequest(`/products/${id}/movements?page=${page}`),
-  exportCsv: () => fetch('/api/products/export/csv', { headers: { Authorization: `Bearer ${localStorage.getItem('flowdesk_token')}` } }),
+  exportCsv: () => fetch(`${getApiBase()}/products/export/csv`, { headers: { Authorization: `Bearer ${localStorage.getItem('flowdesk_token')}` } }),
 };
 
 export const inventoryApi = {
@@ -76,7 +76,7 @@ export const challanApi = {
   checkStock: (items: { productId: string; quantity: number }[]) =>
     apiRequest('/challans/check-stock', { method: 'POST', body: JSON.stringify({ items }) }),
   downloadPdf: (id: string, filename: string) => downloadAuthenticatedFile(`/challans/${id}/pdf`, filename),
-  exportCsv: () => fetch('/api/challans/export/csv', { headers: { Authorization: `Bearer ${localStorage.getItem('flowdesk_token')}` } }),
+  exportCsv: () => fetch(`${getApiBase()}/challans/export/csv`, { headers: { Authorization: `Bearer ${localStorage.getItem('flowdesk_token')}` } }),
 };
 
 export const activityApi = {

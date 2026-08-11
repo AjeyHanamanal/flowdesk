@@ -10,5 +10,9 @@ export const config = {
     expiresIn: process.env.JWT_EXPIRES_IN || '24h',
   },
   clientUrl: process.env.CLIENT_URL || 'http://localhost:5173',
+  allowedOrigins: (process.env.ALLOWED_ORIGINS || process.env.CLIENT_URL || 'http://localhost:5173')
+    .split(',')
+    .map((o) => o.trim())
+    .filter(Boolean),
   isProduction: process.env.NODE_ENV === 'production',
 };

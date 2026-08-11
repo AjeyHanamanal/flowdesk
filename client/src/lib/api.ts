@@ -1,6 +1,10 @@
 import type { ApiResponse } from '../types';
 
-const API_BASE = '/api';
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
+
+export function getApiBase() {
+  return API_BASE.replace(/\/$/, '');
+}
 
 class ApiError extends Error {
   code: string;
@@ -37,7 +41,7 @@ export async function apiRequest<T>(
   };
   if (token) headers.Authorization = `Bearer ${token}`;
 
-  const response = await fetch(`${API_BASE}${endpoint}`, { ...options, headers });
+  const response = await fetch(`${getApiBase()}${endpoint}`, { ...options, headers });
   const json: ApiResponse<T> = await response.json();
 
   if (!json.success) {
@@ -53,7 +57,7 @@ export async function apiRequest<T>(
 
 export async function downloadAuthenticatedFile(endpoint: string, filename: string) {
   const token = getToken();
-  const response = await fetch(`${API_BASE}${endpoint}`, {
+  const response = await fetch(`${getApiBase()}${endpoint}`, {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   });
 

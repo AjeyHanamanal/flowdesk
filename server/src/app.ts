@@ -18,7 +18,18 @@ export function createApp() {
   const app = express();
 
   app.use(helmet({ contentSecurityPolicy: false }));
-  app.use(cors({ origin: config.clientUrl, credentials: true }));
+  app.use(
+    cors({
+      origin: (origin, callback) => {
+        if (!origin || config.allowedOrigins.includes(origin)) {
+          callback(null, true);
+        } else {
+          callback(null, false);
+        }
+      },
+      credentials: true,
+    })
+  );
   app.use(express.json());
 
   app.get('/health', (_req, res) => {
